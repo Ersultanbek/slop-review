@@ -1,0 +1,50 @@
+<idea-plugin>
+    <id>dev.aireview</id>
+    <name>AI Review</name>
+    <vendor>AI Review</vendor>
+    <description><![CDATA[
+        Local code review for AI-written code. Open any diff — uncommitted changes or a commit —
+        comment on the lines like in a pull request, and send the review back to your coding agent.
+        The agent fixes the code and replies in the same threads, right under the code.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.vcs</depends>
+    <depends optional="true" config-file="aireview-terminal.xml">org.jetbrains.plugins.terminal</depends>
+
+    <dependencies>
+        <module name="intellij.platform.collaborationTools"/>
+        <module name="intellij.platform.vcs.impl"/>
+    </dependencies>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <diff.DiffExtension implementation="dev.aireview.editor.AiReviewDiffExtension"/>
+        <editorFactoryListener implementation="dev.aireview.editor.AiReviewEditorListener"/>
+        <postStartupActivity implementation="dev.aireview.AiReviewStartup"/>
+        <toolWindow id="AI Review" anchor="left" secondary="true" icon="/icons/toolWindow.svg"
+                    factoryClass="dev.aireview.toolwindow.AiReviewToolWindowFactory"/>
+        <notificationGroup id="AI Review" displayType="BALLOON"/>
+    </extensions>
+
+    <actions>
+        <action id="AiReview.AttachSession" class="dev.aireview.actions.AttachSessionAction"
+                text="Attach Session" description="Choose the terminal tab with Claude Code that receives this review"/>
+        <action id="AiReview.Send" class="dev.aireview.actions.SendReviewAction"
+                text="Send to AI" description="Send open review comments to the coding agent"
+                icon="/icons/send.svg"/>
+        <action id="AiReview.AddComment" class="dev.aireview.actions.AddReviewCommentAction"
+                text="Add AI Review Comment" description="Comment on the current line or selection for the AI"
+                icon="/icons/ai.svg">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="Diff.EditorPopupMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="alt shift K"/>
+            <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="control shift K" replace-all="true"/>
+        </action>
+        <action id="AiReview.ToggleEditorComments" class="dev.aireview.actions.ToggleEditorCommentsAction"
+                text="Show AI Review Comments"
+                description="Show review threads under the code in the editor; when off, only the gutter icon stays — click it to open a thread"
+                icon="/icons/ai.svg">
+            <add-to-group group-id="EditorGutterPopupMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>
