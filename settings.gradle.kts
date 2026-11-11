@@ -1,1 +1,1 @@
-rootProject.name = "ai-review-plugin"
+rootProject.name = "slop-review"

@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.20.1"
 }
 
-group = "dev.aireview"
+group = "dev.slopreview"
 version = "0.1.0"
 
 repositories {
@@ -13,12 +13,17 @@ repositories {
     }
 }
 
-// -PliveCheck=<папка>: запуск самопроверки в живой IntelliJ Community (ей не нужна лицензия), см. dev.aireview.selfcheck
+// -PliveCheck=<папка>: запуск самопроверки в живой IntelliJ Community (ей не нужна лицензия), см. dev.slopreview.selfcheck
 val liveCheckDir = providers.gradleProperty("liveCheck").orNull
+// -PliveDemo=<папка>: запись кадров демо для README с настоящим Claude Code, см. DemoRecorder и scripts/make-gifs.py
+val liveDemoDir = providers.gradleProperty("liveDemo").orNull
+// -PliveProject=<папка>: какой проект открыть в песочнице
+val liveProjectDir = providers.gradleProperty("liveProject").orNull
+val live = liveCheckDir != null || liveDemoDir != null
 
 dependencies {
     intellijPlatform {
-        if (liveCheckDir != null) {
+        if (live) {
             intellijIdeaCommunity("2025.2.4")
         } else {
             // Собираем против установленной IDEA — без скачивания дистрибутива
@@ -42,10 +47,14 @@ tasks.test {
 }
 
 tasks.runIde {
-    if (liveCheckDir != null) {
+    if (liveProjectDir != null) args(liveProjectDir)
+    if (live) {
+        if (liveCheckDir != null) jvmArgs(
+            "-Dslopreview.selfCheck=$liveCheckDir",
+            "-Dslopreview.selfCheck.agent=${providers.gradleProperty("liveAgent").getOrElse("cat")}"
+        )
+        if (liveDemoDir != null) jvmArgs("-Dslopreview.demo=$liveDemoDir")
         jvmArgs(
-            "-Daireview.selfCheck=$liveCheckDir",
-            "-Daireview.selfCheck.agent=${providers.gradleProperty("liveAgent").getOrElse("cat")}",
             "-Didea.trust.all.projects=true",
             "-Djb.privacy.policy.text=<!--999.999-->",
             "-Djb.consents.confirmation.enabled=false"
