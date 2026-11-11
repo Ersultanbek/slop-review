@@ -52,8 +52,8 @@ object DemoRecorder {
 
     private const val PROPERTY = "slopreview.demo"
     private const val FILE = "PriceCalculator.kt"
-    private const val COMMENT = "Почему скидка зашита в код? Вынеси в параметр, по умолчанию 0."
-    private const val FOLLOW_UP = "И добавь проверку, что скидка от 0 до 1."
+    private const val COMMENT = "Why is the discount hardcoded? Make it a parameter, default 0."
+    private const val FOLLOW_UP = "Also check that the discount is between 0 and 1."
 
     fun isEnabled(): Boolean = System.getProperty(PROPERTY) != null
 

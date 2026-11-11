@@ -2,142 +2,144 @@
 
 # slop-review
 
-**Код-ревью для кода, который написал ИИ. Прямо в IntelliJ IDEA.**
+**Code review for AI-written code, inside IntelliJ IDEA.**
 
-Комментируешь diff как в pull request → отправляешь агенту в терминал → он правит код и отвечает в том же треде.
+Comment on a diff like you would in a pull request, send the review to the agent in your terminal,
+and read its reply in the same thread.
 
 ![IntelliJ IDEA 2025.2+](https://img.shields.io/badge/IntelliJ%20IDEA-2025.2%2B-000000?logo=intellijidea)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.2-7F52FF?logo=kotlin&logoColor=white)
 ![Claude Code](https://img.shields.io/badge/works%20with-Claude%20Code-D97757)
 ![Status](https://img.shields.io/badge/status-0.1.0-blue)
 
-<img src="docs/images/demo.gif" width="900" alt="Комментарий в diff, отправка в Claude Code и ответ в треде">
+<img src="docs/images/demo.gif" width="900" alt="Commenting on a diff, sending the review to Claude Code and getting a reply in the thread">
 
 </div>
 
-## Как я задолбался делать код-ревью
+## Why I got tired of reviewing
 
-Агент пишет код быстрее, чем я успеваю его читать. Читать всё равно приходится мне.
+The agent writes code faster than I can read it. I still have to read it.
 
-Раньше это выглядело так: открываю diff, нахожу странное место, переключаюсь в терминал и печатаю
-«в файле таком-то, строка примерно сороковая, там где скидка, зачем ты зашил 0.15». Агент правит.
-Возвращаюсь в diff, ищу следующее место, снова в терминал. На пятом замечании уже не помню, что было
-в первом, а агент тем временем «улучшил» то, о чём его не просили.
+My review loop used to go like this. Open the diff and find something odd. Switch to the terminal
+and type "in that file, around line forty, the discount thing, why is 0.15 hardcoded". Wait for the fix.
+Go back to the diff, find the next odd thing, switch to the terminal again. By the fifth remark I had
+forgotten the first one, and the agent had "improved" two things I never asked about.
 
-С людьми эта проблема давно решена: есть pull request, комментарии под строкой и тред с обсуждением.
-С агентом, который сидит в соседней вкладке терминала, ничего такого не было. Поэтому появился
-slop-review: тот же pull request, только локально, без пуша и без ожидания, а на той стороне — агент.
+For human teammates this was solved years ago: a pull request, a comment under the line, a thread.
+For the agent sitting in the next terminal tab I had nothing like it. So I built slop-review. It is
+a pull request that stays on my machine, with no push and no waiting, and the agent on the other end.
 
-## Оглавление
+## Contents
 
-- [Возможности](#возможности)
-  - [Комментарии прямо в diff](#комментарии-прямо-в-diff)
-  - [Отправка в Claude Code одним кликом](#отправка-в-claude-code-одним-кликом)
-  - [Дискуссия в одном контексте](#дискуссия-в-одном-контексте)
-  - [Привязка к сессии в терминале](#привязка-к-сессии-в-терминале)
-  - [Треды прячутся, как Git Blame](#треды-прячутся-как-git-blame)
-  - [Resolve и панель со всеми тредами](#resolve-и-панель-со-всеми-тредами)
-  - [Тред держится за код, а не за номер строки](#тред-держится-за-код-а-не-за-номер-строки)
-  - [Другие агенты](#другие-агенты)
-- [Установка](#установка)
-- [Быстрый старт](#быстрый-старт)
-- [Как это устроено](#как-это-устроено)
-- [Разработка](#разработка)
-- [Ограничения](#ограничения)
+- [Features](#features)
+  - [Comments in the diff](#comments-in-the-diff)
+  - [Send to Claude Code in one click](#send-to-claude-code-in-one-click)
+  - [A discussion that keeps its context](#a-discussion-that-keeps-its-context)
+  - [Attach a terminal session](#attach-a-terminal-session)
+  - [Hide threads like Git Blame](#hide-threads-like-git-blame)
+  - [Resolve and the thread list](#resolve-and-the-thread-list)
+  - [Threads follow the code](#threads-follow-the-code)
+  - [Other agents](#other-agents)
+- [Install](#install)
+- [Quick start](#quick-start)
+- [How it works](#how-it-works)
+- [Development](#development)
+- [Limitations](#limitations)
 - [FAQ](#faq)
-- [Лицензия](#лицензия)
+- [License](#license)
 
-## Возможности
+## Features
 
-### Комментарии прямо в diff
+### Comments in the diff
 
-Открываешь обычный diff IDEA — незакоммиченные изменения из окна Commit или любой коммит из Git Log.
-Наводишь на гаттер, жмёшь «+», пишешь комментарий. Он остаётся под строкой, как в pull request.
+Open a regular IDEA diff: uncommitted changes from the Commit window, or any commit from Git Log.
+Hover over the gutter, click **+**, and write a comment. It stays under the line, as in a pull request.
 
-<img src="docs/images/comment.gif" width="820" alt="Комментарий к строке в diff">
+<img src="docs/images/comment.gif" width="820" alt="Commenting on a line in the diff">
 
-- «+» появляется при наведении на любую строку, в том числе на удалённую слева («зачем ты это убрал?»).
-- Чтобы прокомментировать несколько строк, выдели их и вызови **Add Slop Review Comment**:
-  контекстное меню, `⌃⇧K` на macOS, `Alt+Shift+K` на Windows и Linux.
-- Отправка комментария — `⌘↵` / `Ctrl+Enter`, отмена — `Esc`.
-- Свои комментарии можно править и удалять.
+- **+** shows up on any line, including removed lines on the left side ("why did you delete this?").
+- To comment on several lines, select them and run **Add Slop Review Comment** from the context menu,
+  or press `⌃⇧K` on macOS and `Alt+Shift+K` on Windows and Linux.
+- `⌘↵` / `Ctrl+Enter` submits, `Esc` cancels.
+- You can edit and delete your own comments.
 
-### Отправка в Claude Code одним кликом
+### Send to Claude Code in one click
 
-**Send to AI** есть в двух местах: в самом треде, рядом с Reply и Resolve, и в тулбаре панели.
-Плагин печатает `/slop-review` в привязанную вкладку терминала. Агент читает все комментарии,
-которые ждут ответа, правит код и отвечает в тредах — ответ появляется под кодом сам.
+**Send to AI** lives in two places: in the thread, next to Reply and Resolve, and in the panel toolbar.
+The plugin types `/slop-review` into the attached terminal tab. The agent reads every comment that is
+waiting for an answer, changes the code, and replies in the threads. The reply appears under the code
+without a refresh.
 
-<img src="docs/images/send.gif" width="820" alt="Send to AI: Claude Code правит код и отвечает в треде">
+<img src="docs/images/send.gif" width="820" alt="Send to AI: Claude Code changes the code and replies in the thread">
 
-- Уходят все треды, ждущие ответа, а не только тот, где нажата ссылка.
-- Перед отправкой плагин сохраняет открытые файлы, чтобы агент видел то же, что и ты.
-- Когда агент ответил, IDE перечитывает файлы с диска — diff под тредом показывает уже новый код.
-- Статус треда виден сразу: **Waiting for AI** → **AI replied**.
+- Every thread waiting for an answer is sent, including ones other than the thread you clicked in.
+- Open files are saved first, so the agent sees what you see.
+- When the agent replies, the IDE reloads files from disk and the diff under the thread shows the new code.
+- Each thread shows its state: **Waiting for AI**, then **AI replied**.
 
-### Дискуссия в одном контексте
+### A discussion that keeps its context
 
-Не согласен с ответом или хочешь добавить — жмёшь **Reply** и снова **Send to AI**. Следующий раунд
-уходит в ту же сессию, поэтому агент помнит, о чём шла речь, и не начинает разбираться заново.
+If you disagree with the reply or want more, click **Reply** and send again. The next round goes to
+the same session, so the agent remembers what you were talking about.
 
-<img src="docs/images/discussion.gif" width="820" alt="Второй раунд дискуссии в той же сессии">
+<img src="docs/images/discussion.gif" width="820" alt="A second round of discussion in the same session">
 
-Агенту запрещено закрывать треды и трогать чужие комментарии: он может только ответить.
-Решение, закрыт вопрос или нет, остаётся за тобой.
+The agent can only reply. It may not close threads or edit your comments, so you decide when
+a question is settled.
 
-### Привязка к сессии в терминале
+### Attach a terminal session
 
-Вверху панели **Slop Review** есть строка сессии. **Attach Session** показывает вкладки встроенного
-терминала — выбираешь ту, где запущен Claude Code. Делается один раз.
+The **Slop Review** panel has a session row at the top. **Attach Session** lists the tabs of the
+built-in terminal; pick the one running Claude Code. You do this once.
 
-<img src="docs/images/session.png" width="520" alt="Выбор сессии Claude Code">
+<img src="docs/images/session.png" width="520" alt="Choosing a Claude Code session">
 
-- Пока сессия привязана, ревью уходит только в неё, даже если открыта другая вкладка терминала.
-- **Change** — выбрать другую вкладку, **Detach** — отвязать.
-- Если в привязанной вкладке ничего не запущено, плагин предупредит и не станет печатать команду в shell.
-- Без привязанной сессии команда копируется в буфер обмена — вставь её в Claude Code сам.
+- While a session is attached, reviews go only there, even if another terminal tab is selected.
+- **Change** picks another tab. **Detach** removes the link.
+- If nothing is running in the attached tab, the plugin warns you and types nothing into the shell.
+- With no session attached, the command is copied to the clipboard for you to paste.
 
-### Треды прячутся, как Git Blame
+### Hide threads like Git Blame
 
-Треды видны не только в diff, но и в обычном редакторе. Когда они мешают читать код, их можно убрать
-одним переключателем: правый клик по гаттеру → **Show Slop Review Comments** (там же, где
-Annotate with Git Blame) или та же кнопка в тулбаре панели.
+Threads also show in the regular editor. When they get in the way of reading code, one switch hides
+them: right-click the gutter and choose **Show Slop Review Comments** (it sits next to Annotate with
+Git Blame), or use the same button in the panel toolbar.
 
-<img src="docs/images/hide.gif" width="820" alt="Скрытие тредов в обычном редакторе">
+<img src="docs/images/hide.gif" width="820" alt="Hiding threads in the regular editor">
 
-- От скрытого треда остаётся значок в гаттере. Клик по нему открывает и закрывает тред этой строки.
-- Настройка запоминается для проекта и на diff не влияет.
-- Только что написанный комментарий остаётся раскрытым.
+- A hidden thread leaves an icon in the gutter. Click it to open or close the thread on that line.
+- The setting is saved per project and does not affect diffs.
+- A comment you have just written stays open.
 
-### Resolve и панель со всеми тредами
+### Resolve and the thread list
 
-**Resolve** сворачивает тред в одну строку. Панель **Slop Review** показывает все треды по файлам
-со статусами; двойной клик открывает файл на нужной строке.
+**Resolve** collapses a thread to one line. The **Slop Review** panel lists all threads by file with
+their state. Double-click a thread to open the file at that line.
 
-<img src="docs/images/resolve.gif" width="820" alt="Resolve сворачивает тред">
+<img src="docs/images/resolve.gif" width="820" alt="Resolve collapses a thread">
 
-| Кнопка в панели | Что делает |
+| Panel button | What it does |
 | --- | --- |
-| **Send to AI (N)** | Отправить N комментариев, ждущих ответа |
-| **Show Slop Review Comments** | Показывать треды под кодом в обычном редакторе |
-| **Show Resolved** | Показывать закрытые треды в списке |
-| **Delete Resolved** / **Delete All** | Убрать закрытые треды / начать ревью заново |
-| **Copy Review Prompt** | Скопировать самодостаточный промпт для любого агента |
+| **Send to AI (N)** | Sends the N comments waiting for an answer |
+| **Show Slop Review Comments** | Shows threads under the code in the regular editor |
+| **Show Resolved** | Shows resolved threads in the list |
+| **Delete Resolved** / **Delete All** | Removes resolved threads / starts a new review |
+| **Copy Review Prompt** | Copies a self-contained prompt for any agent |
 
-### Тред держится за код, а не за номер строки
+### Threads follow the code
 
-Агент переписал файл, строки уехали — тред остаётся на своём месте. Плагин запоминает фрагмент кода,
-к которому оставлен комментарий, и находит его заново. Если сам фрагмент изменился, тред помечается
-«The code has changed since this comment», но никуда не пропадает.
+When the agent rewrites a file and lines move, the thread stays where it belongs. The plugin stores
+the code fragment you commented on and finds it again. If the fragment itself changed, the thread
+is marked "The code has changed since this comment" and stays in place.
 
-### Другие агенты
+### Other agents
 
-Slash-команда рассчитана на Claude Code. Для любого другого агента есть **Copy Review Prompt**:
-в буфер попадает самодостаточный промпт с описанием формата, который можно вставить куда угодно.
+The slash command targets Claude Code. For any other agent, **Copy Review Prompt** puts
+a self-contained prompt with the file format on the clipboard.
 
-## Установка
+## Install
 
-Нужны IntelliJ IDEA 2025.2 или новее и JDK 21 для сборки.
+You need IntelliJ IDEA 2025.2 or newer, and JDK 21 to build.
 
 ```bash
 git clone git@github.com:Ersultanbek/slop-review.git
@@ -145,28 +147,29 @@ cd slop-review
 JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew buildPlugin
 ```
 
-Затем **Settings → Plugins → ⚙ → Install Plugin from Disk** → `build/distributions/slop-review-0.1.0.zip`
-и перезапуск IDE. Слева внизу появится панель **Slop Review**.
+Then open **Settings → Plugins → ⚙ → Install Plugin from Disk**, choose
+`build/distributions/slop-review-0.1.0.zip`, and restart the IDE. The **Slop Review** panel appears
+at the bottom left.
 
-> Плагин собирается против локальной IDEA по пути `/Applications/IntelliJ IDEA.app`.
-> Если она стоит в другом месте, поправь путь в `build.gradle.kts`.
+> The build uses the local IDEA at `/Applications/IntelliJ IDEA.app`.
+> If yours is installed elsewhere, change the path in `build.gradle.kts`.
 
-## Быстрый старт
+## Quick start
 
-1. Запусти Claude Code во встроенном терминале IDEA и попроси его что-нибудь написать.
-2. Открой diff: двойной клик по файлу в окне Commit.
-3. Наведи на гаттер, нажми «+», напиши комментарий.
-4. В панели **Slop Review** нажми **Attach Session** и выбери вкладку с Claude Code.
-5. Нажми **Send to AI**.
-6. Прочитай ответ в треде: **Reply**, если не согласен, **Resolve**, если вопрос закрыт.
+1. Start Claude Code in the built-in IDEA terminal and ask it to write something.
+2. Open the diff: double-click a file in the Commit window.
+3. Hover over the gutter, click **+**, write a comment.
+4. In the **Slop Review** panel click **Attach Session** and pick the tab with Claude Code.
+5. Click **Send to AI**.
+6. Read the reply in the thread. **Reply** if you disagree, **Resolve** when you are done.
 
-<img src="docs/images/overview.png" width="900" alt="Общий вид: панель, diff с тредом и Claude Code в терминале">
+<img src="docs/images/overview.png" width="900" alt="The panel, a diff with a thread, and Claude Code in the terminal">
 
-## Как это устроено
+## How it works
 
-**Хранилище.** Ревью — это один файл `.slop-review/review.json` в корне проекта. Папка сама добавляется
-в `.git/info/exclude`, так что в коммиты не попадает. Файл читают и пишут обе стороны: плагин следит
-за изменениями и сразу показывает ответы агента.
+**Storage.** A review is one file, `.slop-review/review.json`, in the project root. The folder is added
+to `.git/info/exclude`, so it never ends up in a commit. Both sides read and write the file. The plugin
+watches it and shows agent replies as they land.
 
 ```json
 {
@@ -183,94 +186,92 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew buildPlugin
       "snippet": "        val discount = 0.15",
       "comments": [
         { "id": "c1bar68", "author": "user", "createdAt": "2026-11-11T20:30:55Z",
-          "text": "Почему скидка зашита в код? Вынеси в параметр, по умолчанию 0." },
+          "text": "Why is the discount hardcoded? Make it a parameter, default 0." },
         { "id": "c9ai4k2", "author": "ai", "name": "Claude", "createdAt": "2026-11-11T20:31:08Z",
-          "text": "Вынес скидку в параметр: `fun total(prices: List<Double>, discount: Double = 0.0)`." }
+          "text": "`total` now takes `discount: Double = 0.0`." }
       ]
     }
   ]
 }
 ```
 
-**Канал к агенту.** При открытии проекта плагин ставит slash-команду в `~/.claude/commands/slop-review.md`.
-Она велит агенту прочитать `review.json`, обработать треды, где последнее слово за ревьюером, поправить
-код и дописать ответ. Текст промпта лежит в
+**The channel to the agent.** When a project opens, the plugin installs a slash command at
+`~/.claude/commands/slop-review.md`. It tells the agent to read `review.json`, handle the threads where
+the reviewer spoke last, change the code, and append a reply. The prompt is in
 [`src/main/resources/prompts/slop-review.md`](src/main/resources/prompts/slop-review.md).
-Отправка — это буквально набор `/slop-review` и Enter в привязанной вкладке терминала.
+Sending a review means typing `/slop-review` and Enter into the attached terminal tab.
 
-**Интерфейс.** Треды в diff собраны из тех же платформенных компонентов, на которых в IDEA сделано ревью
-GitHub и GitLab (`intellij.platform.collaborationTools`), поэтому выглядят и ведут себя привычно.
+**UI.** Threads in the diff are built from the platform components that IDEA uses for GitHub and GitLab
+reviews (`intellij.platform.collaborationTools`), so they look and behave the way you expect.
 
 ```
 src/main/kotlin/dev/slopreview/
 ├── model/       ReviewThread, ReviewComment, JSON
-├── store/       ReviewStore — чтение и запись review.json
-├── anchor/      поиск фрагмента и отслеживание строк
-├── editor/      интеграция с diff и редактором, гаттер, инлеи
-├── ui/          компоненты треда и поля ввода
-├── toolwindow/  панель Slop Review
-├── send/        сессии терминала и отправка агенту
-├── actions/     Send to AI, Attach Session, Add Comment, показ тредов
-└── selfcheck/   живая самопроверка и запись демо
+├── store/       ReviewStore: reads and writes review.json
+├── anchor/      finds the code fragment and tracks lines
+├── editor/      diff and editor integration, gutter, inlays
+├── ui/          thread and input components
+├── toolwindow/  the Slop Review panel
+├── send/        terminal sessions and sending to the agent
+├── actions/     Send to AI, Attach Session, Add Comment, show/hide threads
+└── selfcheck/   live self-check and demo recording
 ```
 
-## Разработка
+## Development
 
 ```bash
 export JAVA_HOME=$(/usr/libexec/java_home -v 21)
-./gradlew test          # юнит- и UI-тесты; снимки интерфейса — в build/ui-snapshots/
+./gradlew test          # unit and UI tests; UI snapshots go to build/ui-snapshots/
 ./gradlew buildPlugin   # build/distributions/*.zip
-./gradlew runIde        # IDE-песочница с плагином
+./gradlew runIde        # sandbox IDE with the plugin
 ```
 
-**Живая самопроверка.** Поднимает IntelliJ Community, проходит весь сценарий в настоящем diff
-и терминале и пишет `result.txt` со скриншотами в указанную папку:
+**Live self-check.** It starts IntelliJ Community, runs the whole flow against a real diff and
+terminal, and writes `result.txt` and screenshots to the folder you pass:
 
 ```bash
-./gradlew runIde -PliveCheck=/path/to/out                     # вместо агента — cat
-./gradlew runIde -PliveCheck=/path/to/out -PliveAgent=claude  # настоящий Claude Code
+./gradlew runIde -PliveCheck=/path/to/out                     # cat stands in for the agent
+./gradlew runIde -PliveCheck=/path/to/out -PliveAgent=claude  # real Claude Code
 ```
 
-**Гифки в этом README** не нарисованы руками: их записывает сам плагин в живой IDE с настоящим
-Claude Code, а собирает скрипт.
+**The GIFs in this README** are recorded by the plugin in a live IDE with real Claude Code,
+then assembled by a script:
 
 ```bash
 ./gradlew runIde -PliveDemo=/path/to/frames -PliveProject=/path/to/demo-project
 python3 scripts/make-gifs.py /path/to/frames docs/images
 ```
 
-Демо-проекту нужен git-репозиторий с незакоммиченным изменением в `PriceCalculator.kt`.
+The demo project must be a git repository with an uncommitted change in `PriceCalculator.kt`.
 
-## Ограничения
+## Limitations
 
-- Отправка работает только во встроенный терминал IDEA. Внешние терминалы плагин не видит —
-  для них команда копируется в буфер.
-- Привязка сессии не переживает перезапуск IDE: после него нужно снова нажать Attach Session.
-- Двойной клик по треду в панели открывает файл, но скрытый тред сам не раскрывает.
-- Плагин использует экспериментальные API платформы, поэтому под новую версию IDEA
-  может потребовать пересборки.
+- Sending works only with the built-in IDEA terminal. External terminals are not visible to the
+  plugin; for those the command is copied to the clipboard.
+- The attached session is forgotten when the IDE restarts. Click Attach Session again.
+- Double-clicking a thread in the panel opens the file but does not expand a hidden thread.
+- The plugin uses experimental platform APIs, so a new IDEA version may require a rebuild.
 
 ## FAQ
 
-**Агент ответил `Unknown command: /slop-review`.**
-Сессия Claude Code была запущена раньше, чем появилась команда, и ещё не успела её подхватить.
-Отправь ревью ещё раз или перезапусти Claude Code в этой вкладке.
+**The agent answered `Unknown command: /slop-review`.**
+That Claude Code session started before the command was installed and has not picked it up yet.
+Send the review again or restart Claude Code in that tab.
 
-**Ответ агента не появился в треде.**
-Проверь, что агент дописал ответ в `.slop-review/review.json`, а файл остался валидным JSON.
-Если агент испортил файл, плагин держит прошлое состояние и сохраняет битую версию рядом
-как `review.json.broken`.
+**The agent's reply did not appear in the thread.**
+Check that the agent appended its reply to `.slop-review/review.json` and that the file is still valid
+JSON. If the agent broke the file, the plugin keeps the last good state and saves the broken version
+next to it as `review.json.broken`.
 
-**Можно ли ревьюить старый коммит?**
-Да. Комментарий к коммиту из Git Log запоминает ревизию, и агент получает её вместе с фрагментом.
+**Can I review an old commit?**
+Yes. A comment on a commit from Git Log stores the revision, and the agent receives it with the fragment.
 
-**Попадёт ли ревью в git?**
-Нет, `.slop-review/` добавляется в `.git/info/exclude` — локальный список исключений,
-который не коммитится.
+**Does the review end up in git?**
+No. `.slop-review/` is added to `.git/info/exclude`, a local ignore list that is never committed.
 
-**Почему slop?**
-Потому что без ревью получается именно он.
+**Why "slop"?**
+Because that is what you ship when nobody reviews it.
 
-## Лицензия
+## License
 
-Лицензия пока не выбрана.
+No license has been chosen yet.
